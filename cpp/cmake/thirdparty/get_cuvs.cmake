@@ -74,12 +74,12 @@ endfunction()
 # CPM_cuvs_SOURCE=/path/to/local/cuvs
 find_and_configure_cuvs(VERSION          ${CUML_MIN_VERSION_cuvs}
       FORK             divyegala
-      PINNED_TAG       raft-sparse-updates
+      PINNED_TAG       19ca91d3b0b097fdd14c5f64852433c44210fe95
       EXCLUDE_FROM_ALL ${CUML_EXCLUDE_CUVS_FROM_ALL}
       # When PINNED_TAG above doesn't match cuml,
       # force local cuvs clone in build directory
       # even if it's already installed.
-      CLONE_ON_PIN     ${CUML_CUVS_CLONE_ON_PIN}
+      CLONE_ON_PIN     OFF
       COMPILE_LIBRARY  ${CUML_CUVS_COMPILED}
       USE_CUVS_STATIC  ${CUML_USE_CUVS_STATIC}
       )
