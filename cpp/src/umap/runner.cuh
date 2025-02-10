@@ -100,44 +100,64 @@ void _get_graph(const raft::handle_t& handle,
   raft::common::nvtx::range fun_scope("umap::supervised::_get_graph");
   cudaStream_t stream = handle.get_stream();
 
-  int k = params->n_neighbors;
+  int n_neighbors = params->n_neighbors;
 
   ML::default_logger().set_level(params->verbosity);
 
-  CUML_LOG_DEBUG("n_neighbors=%d", params->n_neighbors);
+  CUML_LOG_DEBUG("n_neighbors=%d", n_neighbors);
 
   raft::common::nvtx::push_range("umap::knnGraph");
-  std::unique_ptr<rmm::device_uvector<value_idx>> knn_indices_b = nullptr;
-  std::unique_ptr<rmm::device_uvector<value_t>> knn_dists_b     = nullptr;
 
-  knn_graph<value_idx, value_t> knn_graph(inputs.n, k);
+  raft::sparse::COO<value_t> fss_graph(stream);
+  {
+    raft::sparse::COO<value_t> strengths(stream, inputs.n * n_neighbors, inputs.n, inputs.n);
+    {
+      std::unique_ptr<rmm::device_uvector<value_idx>> knn_indices_b = nullptr;
+      std::unique_ptr<rmm::device_uvector<value_t>> knn_dists_b     = nullptr;
 
-  /**
-   * If not given precomputed knn graph, compute it
-   */
-  if (inputs.alloc_knn_graph()) {
-    /**
-     * Allocate workspace for kNN graph
-     */
-    knn_indices_b = std::make_unique<rmm::device_uvector<value_idx>>(inputs.n * k, stream);
-    knn_dists_b   = std::make_unique<rmm::device_uvector<value_t>>(inputs.n * k, stream);
+      knn_graph<value_idx, value_t> knn_graph(inputs.n, n_neighbors);
 
-    knn_graph.knn_indices = knn_indices_b->data();
-    knn_graph.knn_dists   = knn_dists_b->data();
+      /**
+       * If not given precomputed knn graph, compute it
+       */
+      if (inputs.alloc_knn_graph()) {
+        /**
+         * Allocate workspace for kNN graph
+         */
+        knn_indices_b =
+          std::make_unique<rmm::device_uvector<value_idx>>(inputs.n * n_neighbors, stream);
+        knn_dists_b =
+          std::make_unique<rmm::device_uvector<value_t>>(inputs.n * n_neighbors, stream);
+
+        knn_graph.knn_indices = knn_indices_b->data();
+        knn_graph.knn_dists   = knn_dists_b->data();
+      }
+
+      CUML_LOG_DEBUG("Calling knn graph run");
+
+      kNNGraph::run<value_idx, value_t, umap_inputs>(
+        handle, inputs, inputs, knn_graph, n_neighbors, params, stream);
+      raft::common::nvtx::pop_range();
+
+      CUML_LOG_DEBUG("Done. Calling fuzzy simplicial set");
+
+      raft::common::nvtx::push_range("umap::simplicial_set");
+
+      FuzzySimplSetImpl::compute_membership_strength<value_t, value_idx, nnz_t, TPB_X>(
+        inputs.n,
+        knn_graph.knn_indices,
+        knn_graph.knn_dists,
+        n_neighbors,
+        &strengths,
+        params,
+        stream);
+    }
+
+    FuzzySimplSetImpl::symmetrize<value_t>(
+      &strengths, &fss_graph, params->set_op_mix_ratio, stream);
   }
 
-  CUML_LOG_DEBUG("Calling knn graph run");
-
-  kNNGraph::run<value_idx, value_t, umap_inputs>(
-    handle, inputs, inputs, knn_graph, k, params, stream);
-  raft::common::nvtx::pop_range();
-
-  CUML_LOG_DEBUG("Done. Calling fuzzy simplicial set");
-
-  raft::common::nvtx::push_range("umap::simplicial_set");
-  raft::sparse::COO<value_t> fss_graph(stream);
-  FuzzySimplSet::run<value_t, value_idx, nnz_t, TPB_X>(
-    inputs.n, knn_graph.knn_indices, knn_graph.knn_dists, k, &fss_graph, params, stream);
+  raft::sparse::op::coo_sort<value_t>(&fss_graph, stream);
 
   CUML_LOG_DEBUG("Done. Calling remove zeros");
 
