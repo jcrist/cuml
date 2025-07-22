@@ -17,7 +17,6 @@
 # distutils: language = c++
 
 
-import logging
 import sys
 
 
@@ -190,7 +189,7 @@ def should_log_for(level):
     return default_logger().should_log(level)
 
 
-def _log(level_enum lvl, msg, default_func):
+def _log(level_enum lvl, msg):
     """
     Internal function to log a message at a given level.
 
@@ -200,8 +199,6 @@ def _log(level_enum lvl, msg, default_func):
         Logging level to be set.
     msg : str
         Message to be logged.
-    default_func : function
-        Default logging function to be used if GPU build is disabled.
     """
     cdef string s = msg.encode("UTF-8")
     default_logger().log(lvl, s)
@@ -224,7 +221,7 @@ def trace(msg):
         Message to be logged.
     """
     # No trace level in Python so we use the closest thing, debug.
-    _log(level_enum.trace, msg, logging.debug)
+    _log(level_enum.trace, msg)
 
 
 def debug(msg):
@@ -243,7 +240,7 @@ def debug(msg):
     msg : str
         Message to be logged.
     """
-    _log(level_enum.debug, msg, logging.debug)
+    _log(level_enum.debug, msg)
 
 
 def info(msg):
@@ -262,7 +259,7 @@ def info(msg):
     msg : str
         Message to be logged.
     """
-    _log(level_enum.info, msg, logging.info)
+    _log(level_enum.info, msg)
 
 
 def warn(msg):
@@ -281,7 +278,7 @@ def warn(msg):
     msg : str
         Message to be logged.
     """
-    _log(level_enum.warn, msg, logging.warn)
+    _log(level_enum.warn, msg)
 
 
 def error(msg):
@@ -300,7 +297,7 @@ def error(msg):
     msg : str
         Message to be logged.
     """
-    _log(level_enum.error, msg, logging.error)
+    _log(level_enum.error, msg)
 
 
 def critical(msg):
@@ -319,7 +316,7 @@ def critical(msg):
     msg : str
         Message to be logged.
     """
-    _log(level_enum.critical, msg, logging.critical)
+    _log(level_enum.critical, msg)
 
 
 def flush():
