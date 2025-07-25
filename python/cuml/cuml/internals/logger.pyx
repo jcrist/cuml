@@ -21,22 +21,20 @@ import sys
 
 
 cdef void _log_callback(int lvl, const char * msg) with gil:
-    """
-    Default spdlogs callback function to redirect logs correctly to sys.stdout
+    """Callback function to redirect logs to `sys.stdout`.
 
     Parameters
     ----------
     lvl : int
-        Level of the logging message as defined by spdlogs
+        Level of the logging message as defined by rapids-logger.
     msg : char *
         Message to be logged
     """
     print(msg.decode('utf-8'), end='')
 
+
 cdef void _log_flush() with gil:
-    """
-    Default spdlogs callback function to flush logs
-    """
+    """Callback function to flush logs."""
     if sys.stdout is not None:
         sys.stdout.flush()
 
@@ -105,9 +103,7 @@ def set_level(level):
 
 
 def get_level() -> level_enum:
-    """
-    Get the current logging level.
-    """
+    """Get the current logging level."""
     return default_logger().level()
 
 
@@ -166,30 +162,32 @@ def set_pattern(pattern):
     return context_object
 
 
-def should_log_for(level):
-    """
-    Check if messages at the given logging level will be logged or not. This is
-    a useful check to avoid doing unnecessary logging work.
+def should_log_for(level_enum level):
+    """Check if messages at the given logging level will be logged or not.
 
-    Examples
-    --------
-
-    .. code-block:: python
-
-        if logger.should_log_for(level_enum.info):
-            # which could waste precious CPU cycles
-            my_message = construct_message()
-            logger.info(my_message)
+    This is a useful check to avoid doing unnecessary logging work.
 
     Parameters
     ----------
     level : level_enum
         Logging level to be set.
+
+    Returns
+    -------
+    bool
+        Whether the given logging level will be logged or not.
+
+    Examples
+    --------
+    >>> if should_log_for(level_enum.info):  # doctest: +SKIP
+    ...     # avoid expensive operation if it won't be logged
+    ...     my_message = construct_expensive_message()
+    ...     info(my_message)
     """
     return default_logger().should_log(level)
 
 
-def _log(level_enum lvl, msg):
+cdef _log(level_enum lvl, str msg):
     """
     Internal function to log a message at a given level.
 
@@ -205,15 +203,11 @@ def _log(level_enum lvl, msg):
 
 
 def trace(msg):
-    """
-    Logs a trace message, if it is enabled.
+    """Logs a message at trace level.
 
     Examples
     --------
-
-    .. code-block:: python
-
-                logger.trace("Hello world! This is a trace message")
+    >>> info("This is a trace message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -225,15 +219,11 @@ def trace(msg):
 
 
 def debug(msg):
-    """
-    Logs a debug message, if it is enabled.
+    """Logs a message at debug level.
 
     Examples
     --------
-
-    .. code-block:: python
-
-                logger.debug("Hello world! This is a debug message")
+    >>> info("This is a debug message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -244,15 +234,11 @@ def debug(msg):
 
 
 def info(msg):
-    """
-    Logs an info message, if it is enabled.
+    """Logs a message at info level.
 
     Examples
     --------
-
-    .. code-block:: python
-
-                logger.info("Hello world! This is a info message")
+    >>> info("This is an info message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -263,15 +249,11 @@ def info(msg):
 
 
 def warn(msg):
-    """
-    Logs a warning message, if it is enabled.
+    """Logs a message at warning level.
 
     Examples
     --------
-
-    .. code-block:: python
-
-                logger.warn("Hello world! This is a warning message")
+    >>> warn("This is a warning message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -282,15 +264,11 @@ def warn(msg):
 
 
 def error(msg):
-    """
-    Logs an error message, if it is enabled.
+    """Logs a message at error level.
 
     Examples
     --------
-
-    .. code-block:: python
-
-                logger.error("Hello world! This is a error message")
+    >>> error("This is an error message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -301,15 +279,11 @@ def error(msg):
 
 
 def critical(msg):
-    """
-    Logs a critical message, if it is enabled.
+    """Logs a message at critical level.
 
     Examples
     --------
-
-    .. code-block:: python
-
-                logger.critical("Hello world! This is a critical message")
+    >>> critical("This is a critical message")  # doctest: +SKIP
 
     Parameters
     ----------
