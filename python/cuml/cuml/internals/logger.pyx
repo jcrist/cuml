@@ -13,10 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-# distutils: language = c++
-
-
 import sys
 
 
@@ -98,15 +94,15 @@ def get_level() -> level_enum:
     return default_logger().level()
 
 
-def should_log_for(level_enum level):
+def should_log_for(level):
     """Check if messages at the given logging level will be logged or not.
 
     This is a useful check to avoid doing unnecessary logging work.
 
     Parameters
     ----------
-    level : level_enum
-        Logging level to be set.
+    level : level_enum or str
+        The logging level to check.
 
     Returns
     -------
@@ -115,22 +111,24 @@ def should_log_for(level_enum level):
 
     Examples
     --------
-    >>> if should_log_for(level_enum.info):  # doctest: +SKIP
+    >>> from cuml.internals import logger
+    >>> if logger.should_log_for(logger.level_enum.info):  # doctest: +SKIP
     ...     # avoid expensive operation if it won't be logged
     ...     my_message = construct_expensive_message()
-    ...     info(my_message)
+    ...     logger.info(my_message)
     """
+    if type(level) is not level_enum:
+        level = level_enum[level]
     return default_logger().should_log(level)
 
 
-cdef _log(level_enum lvl, str msg):
-    """
-    Internal function to log a message at a given level.
+cdef void _log(level_enum lvl, str msg):
+    """Internal function to log a message at a given level.
 
     Parameters
     ----------
     lvl : level_enum
-        Logging level to be set.
+        Level to log at.
     msg : str
         Message to be logged.
     """
@@ -140,10 +138,6 @@ cdef _log(level_enum lvl, str msg):
 
 def trace(msg):
     """Logs a message at trace level.
-
-    Examples
-    --------
-    >>> info("This is a trace message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -157,10 +151,6 @@ def trace(msg):
 def debug(msg):
     """Logs a message at debug level.
 
-    Examples
-    --------
-    >>> info("This is a debug message")  # doctest: +SKIP
-
     Parameters
     ----------
     msg : str
@@ -171,10 +161,6 @@ def debug(msg):
 
 def info(msg):
     """Logs a message at info level.
-
-    Examples
-    --------
-    >>> info("This is an info message")  # doctest: +SKIP
 
     Parameters
     ----------
@@ -187,10 +173,6 @@ def info(msg):
 def warn(msg):
     """Logs a message at warning level.
 
-    Examples
-    --------
-    >>> warn("This is a warning message")  # doctest: +SKIP
-
     Parameters
     ----------
     msg : str
@@ -202,10 +184,6 @@ def warn(msg):
 def error(msg):
     """Logs a message at error level.
 
-    Examples
-    --------
-    >>> error("This is an error message")  # doctest: +SKIP
-
     Parameters
     ----------
     msg : str
@@ -216,10 +194,6 @@ def error(msg):
 
 def critical(msg):
     """Logs a message at critical level.
-
-    Examples
-    --------
-    >>> critical("This is a critical message")  # doctest: +SKIP
 
     Parameters
     ----------
