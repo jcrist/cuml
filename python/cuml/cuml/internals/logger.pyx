@@ -54,52 +54,43 @@ def _verbose_from_level(level: level_enum) -> int:
     return 6 - int(level)
 
 
-cdef class LogLevelSetter:
-    """Internal "context manager" object for restoring previous log level"""
+cdef class set_level:
+    """Set the logging level for the current thread.
 
-    def __cinit__(self, level_enum prev_log_level):
-        self.prev_log_level = prev_log_level
+    Can optionally be used as a contextmanager to reset the log level back to
+    its previous value after the context exits.
+
+    Parameters
+    ----------
+    level : str or level_enum
+        The logging level to set.
+
+    Examples
+    --------
+    >>> from cuml.internals import logger
+
+    Set the log level in this thread to `info`.
+
+    >>> logger.set_level("info")  # doctest: +SKIP
+
+    Set the log level in this thread to `debug` within a single context.
+
+    >>> with logger.set_level("debug"):  # doctest: +SKIP
+    ...     debug("A debug message")
+    """
+    cdef level_enum _prev_level
+
+    def __cinit__(self, level):
+        if not isinstance(level, level_enum):
+            level = level_enum[level]
+        self._prev_level = default_logger().level()
+        default_logger().set_level(level)
 
     def __enter__(self):
         pass
 
-    def __exit__(self, a, b, c):
-        default_logger().set_level(self.prev_log_level)
-
-
-def set_level(level):
-    """
-    Set logging level. This setting will be persistent from here onwards until
-    the end of the process, if left unchanged afterwards.
-
-    Examples
-    --------
-
-    .. code-block:: python
-
-        # regular usage of setting a logging level for all subsequent logs
-        # in this case, it will enable all logs upto and including `info()`
-        logger.set_level(logger.level_enum.info)
-
-        # in case one wants to temporarily set the log level for a code block
-        with logger.set_level(logger.level_enum.debug) as _:
-            logger.debug("Hello world!")
-
-    Parameters
-    ----------
-    level : level_enum
-        Logging level to be set.
-
-    Returns
-    -------
-    context_object : LogLevelSetter
-        This is useful if one wants to temporarily set a different logging
-        level for a code section, as described in the example section above.
-    """
-    cdef level_enum prev = default_logger().level()
-    context_object = LogLevelSetter(prev)
-    default_logger().set_level(level)
-    return context_object
+    def __exit__(self, exc_type, exc_value, traceback):
+        default_logger().set_level(self._prev_level)
 
 
 def get_level() -> level_enum:

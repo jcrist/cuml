@@ -35,7 +35,6 @@ cdef extern from "rapids_logger/logger.hpp" namespace "rapids_logger" nogil:
         error
         critical
         off
-        n_levels
 
     cdef cppclass sink:
         pass
@@ -77,13 +76,3 @@ cdef extern from "cuml/common/logger.hpp" namespace "ML" nogil:
 
 cdef void _log_callback(int lvl, const char * msg) with gil
 cdef void _log_flush() with gil
-
-
-cdef class LogLevelSetter:
-    """Internal "context manager" object for restoring previous log level"""
-    cdef level_enum prev_log_level
-
-
-cdef class PatternSetter:
-    """Internal "context manager" object for restoring previous log pattern"""
-    cdef string prev_pattern
