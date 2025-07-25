@@ -72,6 +72,8 @@ cdef extern from "rapids_logger/logger.hpp" namespace "rapids_logger" nogil:
 cdef extern from "cuml/common/logger.hpp" namespace "ML" nogil:
     cdef logger& default_logger() except +
     cdef string default_pattern() except +
+    cdef sink_ptr default_sink() except +
+    cdef void set_default_sink(sink_ptr sink) except +
 
 cdef void _log_callback(int lvl, const char * msg) with gil
 cdef void _log_flush() with gil

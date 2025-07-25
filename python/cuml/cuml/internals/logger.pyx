@@ -326,8 +326,8 @@ def flush():
     default_logger().flush()
 
 
-# Clear existing sinks and add a callback sink to redirect to sys.stdout
+# Change the default sink to use a callback to redirect to sys.stdout
+set_default_sink(<sink_ptr> make_shared[callback_sink_mt](_log_callback, _log_flush))
+# Update the existing local logger to use the new default sink
 default_logger().sinks().clear()
-default_logger().sinks().push_back(
-    <sink_ptr> make_shared[callback_sink_mt](_log_callback, _log_flush)
-)
+default_logger().sinks().push_back(default_sink())
