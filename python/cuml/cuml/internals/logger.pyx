@@ -107,61 +107,6 @@ def get_level() -> level_enum:
     return default_logger().level()
 
 
-cdef class PatternSetter:
-    """Internal "context manager" object for restoring previous log pattern"""
-
-    def __init__(self, prev_pattern):
-        self.prev_pattern = prev_pattern
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, a, b, c):
-        default_logger().set_pattern(self.prev_pattern)
-
-
-def set_pattern(pattern):
-    """
-    Set the logging pattern. This setting will be persistent from here onwards
-    until the end of the process, if left unchanged afterwards.
-
-    Examples
-    --------
-
-    >>> # regular usage of setting a logging pattern for all subsequent logs
-    >>> import cuml.internals.logger as logger
-    >>> logger.set_pattern("--> [%H-%M-%S] %v")
-    <cuml.internals.logger.PatternSetter object at 0x...>
-    >>> # in case one wants to temporarily set the pattern for a code block
-    >>> with logger.set_pattern("--> [%H-%M-%S] %v") as _:
-    ...     logger.info("Hello world!")
-    --> [...] Hello world!
-
-    Parameters
-    ----------
-    pattern : str
-        Logging pattern string. Refer to this wiki page for its syntax:
-        https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
-
-    Returns
-    -------
-    context_object : PatternSetter
-        This is useful if one wants to temporarily set a different logging
-        pattern for a code section, as described in the example section above.
-    """
-    # TODO: We probably can't implement this exact API because you can't
-    # get the pattern from a spdlog logger since it could be different for
-    # every sink (conversely, you could set because it forces every sink to
-    # be the same). The best we can probably do is revert to the default
-    # pattern.
-    cdef string prev = default_pattern()
-    # TODO: Need to cast to a Python string?
-    context_object = PatternSetter(prev)
-    cdef string s = pattern.encode("UTF-8")
-    default_logger().set_pattern(s)
-    return context_object
-
-
 def should_log_for(level_enum level):
     """Check if messages at the given logging level will be logged or not.
 

@@ -52,9 +52,6 @@ def test_logger():
         assert logger.should_log_for(logger.level_enum.warn)
         assert not logger.should_log_for(logger.level_enum.info)
 
-    with logger.set_pattern("%v"):
-        logger.info("This is an info message")
-
 
 def test_set_level_get_level():
     orig = logger.get_level()
