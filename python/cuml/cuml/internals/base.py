@@ -157,11 +157,6 @@ class Base(TagsMixin, metaclass=cuml.internals.BaseMetaClass):
         self.verbose = verbose
         if output_type is None:
             output_type = cuml.global_settings.output_type or "input"
-            if output_type == "mirror":
-                raise ValueError(
-                    "Cannot pass output_type='mirror' to Base.__init__(). Did you forget "
-                    "to pass `output_type=self.output_type` to a child estimator? "
-                )
         else:
             output_type = check_output_type(output_type)
         self.output_type = output_type
@@ -250,7 +245,7 @@ class Base(TagsMixin, metaclass=cuml.internals.BaseMetaClass):
         output_type = cuml.global_settings.output_type
 
         # If not set to an explicit value, use the estimator's setting
-        if output_type in (None, "input", "mirror"):
+        if output_type in (None, "input"):
             output_type = self.output_type
 
         # If input, get the type from the input (if available)

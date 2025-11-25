@@ -108,7 +108,7 @@ class CumlArrayDescriptor:
         output_type = cuml.global_settings.output_type
 
         # First, determine if we need to call to_output at all
-        if output_type == "mirror":
+        if output_type == "cuml":
             # We must be internal, just return the input type
             return existing.get_input_value()
 

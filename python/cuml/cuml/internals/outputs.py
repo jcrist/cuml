@@ -225,7 +225,7 @@ def enter_internal_api():
     if gs._external_output_type is False:
         # External, this is a new context
         gs._external_output_type = gs.output_type
-        gs.output_type = "mirror"
+        gs.output_type = "cuml"
         try:
             yield True
         finally:
@@ -399,7 +399,7 @@ def reflect(
 
         if not skip:
             gs = GlobalSettings()
-            if was_external or gs.output_type != "mirror":
+            if was_external or gs.output_type != "cuml":
                 # We're returning to the user, infer the expected output type
                 if model is not None:
                     if array is not None:
